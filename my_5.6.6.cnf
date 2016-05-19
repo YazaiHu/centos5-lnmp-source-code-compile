@@ -1,0 +1,240 @@
+[client]
+default-character-set=utf8
+port    = 3306
+socket  = /tmp/mysql.sock
+
+[mysqld]
+character-set-server = utf8
+user    = mysql
+port    = 3306
+socket  = /tmp/mysql.sock
+basedir = /usr/local/mysql
+datadir = /data/mysql/3306/data
+#log_output = table
+log_output = file
+general_log_file=/data/mysql/3306/log/mysql_general.log
+log-error = /data/mysql/3306/log/mysql_error.log
+pid-file = /data/mysql/3306/mysql.pid
+open_files_limit    = 10240
+
+explicit_defaults_for_timestamp
+
+# 操作系统在监听队列中所能保持的连接数,如果有非常连接率并且出现"connection refused"报错，则应该增加此处的值
+back_log = 600
+# mysql服务所允许的同时会话数的上限,其中一个连接将被super权限保留作为管理员登录
+max_connections = 200
+# 每个客户端连接最大的错误允许数量，如果达到此限制，这个客户端将会被mysql服务阻止直到执行了flush hosts或服务重启
+# 非法的密码以及其他在链接时的错误会增加此值
+# 查看aborted_connects状态来获取全局计数器
+max_connect_errors = 6000
+# 所有线程所打开表的数量，增加此值就增加了mysqld所需要的文件描述符的数量,需要确认在[mysqld_safe]中的open-files-limit变量设置打开文件数量允许至少614
+#table_cache = 614
+# 允许外部文件级别的锁，打开文件锁会对性能千万负面影响,所以只有在你在同样的文件上运行多个数据库实例时才使用此选项(注意仍会有其他约束!)
+# 或者你在文件层面上使用了其他一些软件信赖来锁定myisam表
+external-locking = FALSE
+# 服务所能处理的请求包的最大大小以及服务所能处理的最大的请求大小(当与大的blob字段一起工作时相当必要）
+# 每个连接独立的大小，大小动态增加
+max_allowed_packet = 32M
+# 排序缓冲被用来处理类似 order by 以及group by 队列所引起的排序
+# 如果排序后的数据无法放入排序缓冲，一个用来替代的基于磁盘的合并分类会被使用，查看"sort_merge_passes"状态变量。在排序发生时由每个线程分配
+sort_buffer_size = 1M
+# 此缓冲被用来优化全联合(full joins 不带索引的联合)
+# 类似的联合在极大多数情况下有非常糟糕的性能表现，但是将此值设大能够减轻性能影响
+# 通过select_full_join状态变量查看全联合的数量,当全联合发生时，在每个线程中分配
+join_buffer_size = 1M
+# 我们在cache中保留多少线程用于重用
+# 当一个客户端断开连接后，如果cache中的线程还少于thread_cache_size，则客户端线程被放入cache中。这可以在你需要大量新连接的时候极大的减少线程创建的开销
+# (一般来说如果你有好的线程模型的话，这不会有明显的性能提升)
+thread_cache_size = 300
+# 此允许应用程序给予线程系统一个提示在同一时间给予渴望被运行的线程的数量，此值只对于支持thread_concurrency()函数的系统有意义(如sun solaris)
+# 可以尝试使用[cpu数量]*(2..4)来作为thread_concurrency的值
+#thread_concurrency = 8
+# 设置Query Cache所使用的内存大小，默认值为0，大小必须是1024的整数倍，如果不是整数倍，MySQL会自动调整降低最小量以达到1024的倍数
+query_cache_size = 16M
+# 允许cache的单条Query结果集的最大容量,默认是1MB，超过此参数设置的query结果集将不会被cache
+query_cache_limit = 2M
+# 设置Query Cache中每次分配内存的最小空间大小，也就是每个Query的Cache最小占用的内存空间大小
+query_cache_min_res_unit = 2k
+# 控制query cache功能的开关,
+#0(OFF) 关闭query cache，任何情况下都不会使用query cache
+#1(ON) 开启，但是当select语句中使用的SQL_NO_CACHE提示后，将不使用query cache
+#2(DEMAND) 开启，但是只有当select语句中使用了SQL_CACHE提示后，才使用Query Cache
+query_cache_type = 1
+# 控制当有写锁定发生在表上的时刻是否先失效该表相差的Query Cache，如果设置为1，则在写锁定的同时将失效该表相关的所有Query Cache，如果设置为0，则在锁定时刻仍然允许读取该表相关的Query Cache
+query_cache_wlock_invalidate=0
+default-storage-engine = MyISAM
+# 线程使用的堆大小，此容量的内存在每次连接时被预留。
+# mysal本身常不会需要超过64K的内存，如果你使用你自己的需要大量准的UDF函数，或者你的操作系统对于某些操作需要更多的堆，你也许需要将其设置的更高一点
+thread_stack = 192K
+# 设置默认的事务隔离级别，可用的级别如下：
+# READ-UNCOMMITTED,READ-COMMITTED,REPEATABLE-READ,SERIALIZABLE
+transaction_isolation = READ-COMMITTED
+# 内部(内存中)临时表的最大大小,如果一个表增长到比此值更大，将会自动转换为基于磁盘的表,此限制是针对单个表的，而不是总和
+tmp_table_size = 8M
+# 独立的内存表所允许的最大容量
+# 此选项为了防止意外创建一个超大的内存表导致耗尽所有的内存资源
+max_heap_table_size = 8M
+
+
+# 所有的使用了比这个时间(以秒为单位)更多的查询会被认为是慢速查询(默认是10秒)，不要在这里使用"1"，否则会导致所有的查询，甚至非常快的查询而被记录下来(由于mysql目前时间的精确度只能达到秒级别)
+long_query_time = 3
+# 记录慢速查询。慢速查询是指消耗了比"long_query_time"定义的更多时间的查询。如果log_long_format被打开，那些没有使用索引的查询也会被记录，如果你经常增加新查询到已有的系统内的话，一般来说这是一个好主意
+#log-slow-queries
+slow_query_log = on
+#log_slow_queries = /data/mysql/3306/log/mysql_slow.log
+#log-slow-queries = /data/mysql/3306/log/mysql_slow.log
+slow_query_log_file = /data/mysql/3306/log/mysql_slow.log
+# 记录没有使用索引的查询
+log-queries-not-using-indexes
+# 记录执行速度较慢的管理命令(如optimize table)
+log-slow-admin-statements
+
+# 在慢速日志中记录更多的信息.一般此项最好打开，打开此项会使得那些没有使用索引的查询也被作为慢速查询附加到慢速日志里
+#log_long_format
+
+# 在一个事务中binlog为了记录sql状态所持有的cache大小
+# 如果经常使用大的、多声明的事务，你可以增加此值来获取最大的性能
+# 所有从事务来的状态都将被缓冲在binlog缓冲中然后在提交后一次性写入到binlog中
+# 如果事务比此值大，会使用磁盘上的临时文件来替代
+# 此缓冲在每个连接的事务第一次更新状态时被创建
+binlog_cache_size = 4M
+binlog_format = MIXED
+max_binlog_cache_size = 8M
+max_binlog_size = 1G
+expire_logs_days = 30
+
+# myisam 相关选项
+# 关键词缓冲的大小，一般用来缓冲myisam表的索引块，不要将其设置大于你可用内存的30%，因为一部分内存同样被os用来缓冲行数据，甚至在你并不使用myisam表的情况下，你也需要仍旧设置8-64M的内存
+key_buffer_size = 8M
+# 用来做myisam表全表扫描的缓冲大小
+read_buffer_size = 8M
+# 当在排序之后，从一个已经排序好的序列中读取行时，行数据将从这个缓冲中读取来防止磁盘寻道。如果你增高此值，可以提高很多order by的性能，当需要时由每个线程分配
+read_rnd_buffer_size = 16M
+# myisam使用特殊的类似树的cache来使得突发插入更快，此变量限制每个进程中缓冲树的字节数，设置为0会关闭此优化，为了最优化不要将此值设置大于"key_buffer_size"，当突发插入审美观点检测到时此缓冲将被分配
+bulk_insert_buffer_size = 64M
+# 此缓冲当mysal需要在repair、optimize、alter以及load data infile到一个空表中引起重建索引时被分配，这在每个线程中被分配，所以在设置大值时需要小心
+myisam_sort_buffer_size = 8M
+# mysql重建索引时所允许的最大临时文件的大小(当repair、alter table或者load data infile)
+# 如果文件大小比此值更大，索引会通过键值缓冲创建(更慢)
+myisam_max_sort_file_size = 10G
+# 如果被用来更快的索引创建索引所使用临时文件大于制定的值，那就使用键值缓冲方法。这主要用来强制在大表中长字串健去使用慢速的键值缓冲方法来创建索引
+#myisam_max_extra_sort_file_size=10G
+# 如果一个表拥有超过一个索引，myisam可以通过并行排序使用超过一个线程去修复他们.这对于拥有多个cpu以及大量内存情况的用户，是一个很好的选择
+myisam_repair_threads = 1
+# 自动检查和修复没有适当关闭的myisam表
+myisam_recover
+
+
+
+interactive_timeout = 7200
+wait_timeout = 120
+
+skip-name-resolve
+
+# 跳过错误，继续执行复制操作
+slave-skip-errors = 1032,1062,126,1114,1146,1048,1396
+
+server-id = 1
+# slave MySQL 5.1.7以后开始就不支持master-host类似的参数了
+#master-host     =   192.168.117.100
+#master-user     =   slave
+#master-password =   123456
+#master-port     =  3306
+# 如果主服务器断线，重试的时间间隔，单位:秒
+#master-connect-retry = 10
+
+
+# 打开全查询日志，所有的由服务器接收到的查询(甚至对于一个错误语法的查询)都会被记录下来，这对于高度非常有用，在生产环境中常常关闭此项(严重影响性能) 
+#log
+# 将警告打印输出到错误log文件，如果对于mysql有任何问题，应该打开警告log并且仔细审查错误日志，查出可能的原因
+#log_warnings
+
+# 写binlog绝对路径名
+# 打开二进制日志功能，在复制(replication)配置中，作为master主服务器必须打开此项，如果你需要从你最后的备份中做基于时间点的恢复，你也同样需要二进制日志
+log-bin = /data/mysql/3306/binlog/binlog
+# sync-binlog=1
+# 如果你在使用链式从服务器结构的复制模式(A->B->C)，你需要在服务器B上打开此项，此选项打开在从线程上重做更新过的日志，并将其写入从服务器的二进制日志
+log-slave-updates
+# 需要同步的数据库，如果没有本行，即表示同步所有的数据库
+#binlog-do-db=wordpress292,test
+# 需要同步的数据库名称
+#replicate-do-db		= wordpress292,test
+# replicate-wild-do-table= 7789_mgmtDB.%
+#忽略同步的数据库
+replicate-ignore-db = information_schema
+replicate-ignore-db = mysql
+#replicate-ignore-db = test
+
+# 中继日志名称
+relay-log = /data/mysql/3306/relaylog/relaylog
+# 中继日志索引
+relay-log-index = /data/mysql/3306/relaylog/relaylog
+relay-log-info-file = /data/mysql/3306/relaylog/relaylog
+
+
+# innodb 相关选项
+innodb_use_sys_malloc=1
+# 如果mysal服务包含innodb支持但是并不打算使用的话，使用此选项会节省内存以及磁盘空间，并且加速某些部分  
+#skip-innodb
+# 附加的内存池被innodb用来保存metadata信息。如果innodb为此目的需要更多的内存，它会开始从OS这里申请内存，由于这个操作在大多数现代操作系统上已经足够快，你一般不需要修改此值，show innodb status命令会显示当前使用的数量
+innodb_additional_mem_pool_size = 16M
+# innodb使用一个缓冲池来保存索引和原始数据，不像myisam。这里你设置越大，你在存取表里面数据时所需要的磁盘I/O越少，在一个独立使用的数据库服务器上，你可以设置这个变量到服务器物理内存大小的80%，不要设置过大，否则，由于物理内存的竞争可以导致操作系统的换页颠簸。注意在32位系统上你每个进程可能被限制在2-3.5G用户层面内存限制，所以不要设置的太高.
+innodb_buffer_pool_size =128M 
+# innodb将数据保存在一个或多个数据文件中成为表空间。如果你只有单个逻辑驱动保存你的数据，一个单个的自增长文件就足够好了。其他情况下，每个设备一个文件一般都是个好的选择。你也可以设置innodb来使用裸盘分区——请参考手册来获取更多相关内容
+# innodb_autoextend_increment = 8
+#innodb_data_file_path = ibdata1:256M;/tmp/ibdata2:50M:autoextend
+innodb_data_file_path = ibdata1:256M:autoextend
+
+# 设置此选项如果你希望innodb表空间文件被保存在其他分区，默认保存在mysql的datadir中
+#innodb_data_home_dir=
+# 用来同步IO操作的IO线程的数量。此值在Unix下被硬编码为4，但是在windows磁盘I/O可能在一个大数值下表现的更好
+innodb_file_io_threads = 4
+# 如果你发现innodb表空间损坏，设置此值为一个非零值可能帮助你导出你的表,从1开始并且增加此值知道你能够成功的导出表
+#innodb_force_recovery=1
+# 在innodb核心内的允许线程数量，最优值信赖于应用程序，硬件以及操作系统的调度方式。过高的值可能导致线程的互斥颠簸。
+innodb_thread_concurrency = 8
+# 如果设置为1,innodb会在每次提交后刷新(fsync)事务日志到磁盘上.这提供了完事的ACID行为.如果你愿意对事务完全折中，并且你正在运行一个小的事务，你可以设置此值到0或2来减少由事务日志引起的磁盘I/O，0代表日志只大约每秒写入日志文件并且日志文件刷新到磁盘，2代表日志写入日志文件在每次提交后，但是日志文件只有大约每秒才会刷新到磁盘上。
+innodb_flush_log_at_trx_commit = 2
+# 加速innodb的关闭，这会阻止innodb在关闭时做全清除以及插入缓冲合并。这可能极大增加关机时间，但是取而代之的是innodb可能在下次启动时做这些操作
+#innodb_fast_shutdown
+# 用来缓冲日志数据的缓冲区的大小。当此值快满时，innodb将必须刷新数据到磁盘上，由于基本上每秒都会刷新一次，所以没有必要将此值设置的太大(甚至对于长事务而言)
+innodb_log_buffer_size = 16M
+# 在日志组中每个日志文件的大小。你应该设置日志文件总和大小到你缓冲池大小的25%-100%来避免在日志文件覆写上不必要的缓冲池刷新行为。不论如何，请注意一个大的日志文件大小会增加恢复进程所需要的时间
+innodb_log_file_size = 128M
+# 在日志组中的文件总数，通常来说2-3是比较好的
+innodb_log_files_in_group = 3
+# innodb的日志文件所在位置，默认是mysql的datadir.你可以将其指定到一个独立的硬盘上或者一个RAID1卷上来提高其性能
+#innodb_log_group_home_dir
+# 在innodb缓冲池中最大允许的脏页面的比例.如果达到限额，innodb会开始刷新他们防止他们妨碍到干净数据页面。这是一个软限制，不被保证绝对执行。
+innodb_max_dirty_pages_pct = 90
+# innodb用来刷新日志的方法,表空间总是使用双重写入刷新方法.默认值是"fdatasync",另一个是"O_DSYNC",O_DIRECT 在linux上使用direct IO可以显著提升速度，特别是在RAID上(因为可以避免
+# 额外的数据复制和double buffering(my buffering 和 os buffering)
+#innodb_flush_method='O_DSYNC'
+# 在被回滚前，一个innodb的事件应该等待一个锁被批准多久。innodb在其拥有的锁表中自动检测事务死锁并且回滚事务。如果你使用lock tables指令，或者在同样事务中使用除了innodb以外的其他事务安全的存储引擎，那么一个死锁可能发生而innodb无法注意到,这种情况下，这个timeout值对于解决这种总是就非常有帮助
+innodb_lock_wait_timeout = 120
+innodb_file_per_table = 0
+
+
+# 被全文检索索引的最小的字长。你也许希望减少它，如果你需要搜索更短字的时候，注意在你修改此值之后，你需要重建你的fulltext索引
+#ft_min_word_len=8
+
+# 当创建新表时作为默认使用的表类型。如果在创建表时没有特别指定表类型，将会使用此值
+#default_table_type=MYISAM
+
+# 此目录被mysql用来保存临时文件，例如：
+# 1、它被用来处理基于磁盘的大型排序和内部排序
+# 2、简单的临时表
+# 可以使用";"来放置多个路径
+# 他们会按照roud-robin方法被轮询使用
+#tmpdir=/tmp
+
+
+[mysqldump]
+# 不要在将内存中的整个结果写入磁盘之前缓存，在导出非常巨大的表时需要此项
+quick
+max_allowed_packet = 32M
+
+[mysqld_safe]
+# 增加每个进程的可打开文件数量。
+# 警告： 确认你已经将全系统限制设定的足够高！打开大量表需要将此值设大!
+open-files-limit=8192
